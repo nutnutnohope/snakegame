@@ -3,6 +3,7 @@ import time
 import random
 import json
 import os
+import tkinter as tk
 
 DELAY = 0.1
 PLAYFIELD = 300
@@ -55,6 +56,37 @@ def save_highscores(data):
             json.dump(data, f)
     except Exception:
         pass
+
+
+# Try to set a window icon from nearby files: prefer .ico, fallback to .png.
+def set_window_icon(wn):
+    # Determine candidate icon files in script directory
+    base_dir = os.path.dirname(__file__)
+    ico_path = os.path.join(base_dir, "snake_icon.ico")
+    png_path = os.path.join(base_dir, "snake_icon.png")
+    try:
+        # Access the underlying Tk root
+        root = wn.getcanvas().winfo_toplevel()
+        # Try .ico first (Windows-friendly)
+        if os.path.exists(ico_path):
+            try:
+                root.iconbitmap(ico_path)
+                return True
+            except Exception:
+                pass
+        # Try PNG via PhotoImage (works on many platforms)
+        if os.path.exists(png_path):
+            try:
+                img = tk.PhotoImage(file=png_path)
+                root.iconphoto(False, img)
+                # keep a reference to prevent garbage collection
+                wn._icon_img = img
+                return True
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return False
 
 
 class Player:
@@ -191,6 +223,13 @@ def main():
     wn.bgcolor("#b6e3b6")
     wn.setup(width=600, height=600)
     wn.tracer(0)
+
+    # Attempt to set a custom window icon (place snake_icon.ico or snake_icon.png
+    # next to this script). This is optional; function silently fails if absent.
+    try:
+        set_window_icon(wn)
+    except Exception:
+        pass
 
     turtle.colormode(255)  # allow 0-255 RGB color values
     draw_background(wn)  # draw static border and grid
