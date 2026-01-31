@@ -1,6 +1,8 @@
 import turtle  # Import turtle module for graphics
 import time    # Import time module to control game speed
 import random  # Import random module for random food positions
+import os
+import tkinter as tk
 
 delay = 0.1    # Initial delay / game speed
 
@@ -8,64 +10,116 @@ delay = 0.1    # Initial delay / game speed
 score = 0      # Current score
 high_score = 0 # Highest score
 
-# Set up the game window without animation
+# Set up the game window with softer visuals
 wn = turtle.Screen()              # Create main game window object
 wn.title("Snake Game")           # Set the game window title
-wn.bgcolor("#00FF15")            # Set the window background color
+wn.bgcolor("#2e8b57")            # Softer green background for comfortable play
 wn.setup(width=600, height=600)   # Set the window size to 600x600 pixels
-wn.tracer(0)                      # Turn off animation for instant drawing
+wn.tracer(0)                      # Turn off automatic animation for manual updates
 
-# Create a two-tone green checkerboard pattern
+# Attempt to set a custom window icon named 'snake_icon.ico' or 'snake_icon.png'
+# Place the icon file alongside this script. Falls back silently if missing.
+try:
+    root = wn.getcanvas().winfo_toplevel()
+    icon_path = os.path.join(os.path.dirname(__file__), 'snake_icon.ico')
+    png_path = os.path.join(os.path.dirname(__file__), 'snake_icon.png')
+    if os.path.exists(icon_path):
+        root.iconbitmap(icon_path)
+    elif os.path.exists(png_path):
+        img = tk.PhotoImage(file=png_path)
+        root.iconphoto(True, img)
+except Exception:
+    pass
+
+# Create a subtle two-tone grid to aid orientation (smaller squares)
 kotak = turtle.Turtle()           # Turtle used for drawing the squares
 kotak.hideturtle()                # Hide the turtle shape while drawing
 kotak.penup()                     # Lift pen to avoid drawing while moving
 kotak.speed(0)                    # Set turtle speed to maximum
-warna1 = "#11BB01"              # Light green color
-warna2 = "#009908"              # Dark green color
-ukuran_kotak = 40                 # Size of each square in pixels
+warna1 = "#3aa75e"              # Subtle light green
+warna2 = "#2a6f3a"              # Subtle dark green
+ukuran_kotak = 30                 # Smaller squares make movement feel finer
 
 for y in range(-300, 300, ukuran_kotak):         # Loop rows top to bottom
     for x in range(-300, 300, ukuran_kotak):     # Loop columns left to right
         if ((x // ukuran_kotak) + (y // ukuran_kotak)) % 2 == 0:  # Determine checker color
-            kotak.color(warna1)                  # Use color1 for this square
+            kotak.color(warna1)
         else:
-            kotak.color(warna2)                  # Use color2 for this square
-        kotak.goto(x, y)                         # Move turtle to square position
-        kotak.begin_fill()                       # Begin filling the square
-        for _ in range(4):                       # Draw 4 sides of the square
-            kotak.pendown()                      # Put pen down to draw
-            kotak.forward(ukuran_kotak)          # Draw side of square
-            kotak.left(90)                       # Turn turtle 90 degrees left
-        kotak.end_fill()                         # Finish filling the square
-        kotak.penup()                            # Lift pen before moving to next square
+            kotak.color(warna2)
+        kotak.goto(x, y)
+        kotak.begin_fill()
+        for _ in range(4):
+            kotak.pendown()
+            kotak.forward(ukuran_kotak)
+            kotak.left(90)
+        kotak.end_fill()
+        kotak.penup()
 
-# Snake head
-head = turtle.Turtle()  # Create turtle object for the snake head
-head.speed(0)           # Set animation speed to maximum
-head.shape("square")  # Set head shape to square
-head.color("#dd954e") # Set head color to brownish
-head.penup()            # Do not leave a trail when moving
-head.goto(0,0)          # Start position at the center of the screen
-head.direction = "stop" # Initial direction is stop
+# Draw a visible but unobtrusive border for the play area
+border = turtle.Turtle()
+border.hideturtle()
+border.penup()
+border.goto(-300, -300)
+border.pendown()
+border.pensize(3)
+border.color("#123d1f")
+for _ in range(4):
+    border.forward(600)
+    border.left(90)
+border.penup()
 
-# Snake food
-food = turtle.Turtle()  # Create turtle object for the food
-food.speed(0)           # Set animation speed to maximum
-food.shape("triangle") # Set food shape to triangle
-food.color("#ffff00")  # Set food color to yellow
-food.penup()            # Do not leave a trail when moving
-food.goto(0,100)        # Initial food position
-segments = []           # Empty list to store snake body segments
+# Snake head (rounded for friendlier look)
+head = turtle.Turtle()
+head.speed(0)
+head.shape("circle")            # Rounded head feels softer than square
+head.color("#ffb86b")           # Warm color for visibility
+head.shapesize(1.2, 1.2)          # Slightly larger head
+head.penup()
+head.goto(0,0)
+head.direction = "stop"
+
+# Snake food (rounded and high-contrast)
+food = turtle.Turtle()
+food.speed(0)
+food.shape("circle")
+food.color("#ff4040")   # Contrasting red for clear visibility
+food.shapesize(0.9, 0.9)
+food.penup()
+food.goto(0,100)
+
+# Snake body segments (use rounded shapes for a softer look)
+segments = []
 
 # Pen to write the score
-pen = turtle.Turtle()   # Turtle used for displaying score text
-pen.speed(0)            # Set animation speed to maximum
-pen.shape("square")    # Pen shape (not visible)
-pen.color("white")     # Text color
-pen.penup()             # Do not leave a trail
-pen.hideturtle()        # Hide the turtle, only display text
-pen.goto(0, 260)        # Position text at the top of the window
-pen.write("Score: 0  High Score: 0", align="center", font=("Courier", 24, "normal"))  # Initial score display
+pen = turtle.Turtle()
+pen.speed(0)
+pen.shape("square")
+pen.color("white")
+pen.penup()
+pen.hideturtle()
+pen.goto(0, 260)
+pen.write("Score: 0  High Score: 0", align="center", font=("Courier", 20, "normal"))  # Slightly smaller font
+
+# Instruction / status pen
+instr = turtle.Turtle()
+instr.speed(0)
+instr.hideturtle()
+instr.penup()
+instr.goto(0, 230)
+instr.color("white")
+instr.write("WASD to move  |  P to Pause/Resume", align="center", font=("Courier", 14, "normal"))
+
+# Pause state
+paused = False
+
+def toggle_pause():
+    global paused
+    paused = not paused
+    instr.clear()
+    if paused:
+        instr.write("Paused — press P to resume", align="center", font=("Courier", 14, "normal"))
+    else:
+        instr.write("WASD to move  |  P to Pause/Resume", align="center", font=("Courier", 14, "normal"))
 
 # Movement control functions for the snake
 def go_up():
@@ -108,10 +162,15 @@ wn.onkeypress(go_up, "w")        # Bind W to move up
 wn.onkeypress(go_down, "s")      # Bind S to move down
 wn.onkeypress(go_left, "a")      # Bind A to move left
 wn.onkeypress(go_right, "d")     # Bind D to move right
+wn.onkeypress(toggle_pause, "p") # Bind P to pause/resume
 
 # Main game loop
 while True:
     wn.update() # Update the game window
+
+    if paused:
+        time.sleep(0.08)
+        continue
 
     # Check for collision with border
     if head.xcor()>290 or head.xcor()<-290 or head.ycor()>290 or head.ycor()<-290:
@@ -134,7 +193,7 @@ while True:
 
         # Update the score display
         pen.clear()
-        pen.write("Score: {}  High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal")) 
+        pen.write("Score: {}  High Score: {}".format(score, high_score), align="center", font=("Courier", 20, "normal")) 
 
     # Check for collision with the food
     if head.distance(food) < 20:  # If the head is within 20 pixels of the food
@@ -145,11 +204,12 @@ while True:
 
         # Add a new segment to the snake's body
         new_segment = turtle.Turtle()    # Create a new body segment
-        new_segment.speed(0)             # Set animation speed to maximum
-        new_segment.shape("square")    # Set shape to square
-        new_segment.color("#dd954e")   # Set segment color to match head
-        new_segment.penup()              # Do not draw while moving
-        segments.append(new_segment)     # Append the new segment to the list
+        new_segment.speed(0)
+        new_segment.shape("circle")    # Rounded segments
+        new_segment.color("#e09a5a")   # Slightly darker than head for depth
+        new_segment.shapesize(0.9, 0.9)
+        new_segment.penup()
+        segments.append(new_segment)
 
         # Increase game speed slightly
         delay -= 0.001                  # Decrease delay to increase difficulty
@@ -163,44 +223,39 @@ while True:
         
         # Update the score display
         pen.clear()
-        pen.write("Score: {}  High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal")) 
+        pen.write("Score: {}  High Score: {}".format(score, high_score), align="center", font=("Courier", 20, "normal")) 
 
     # Move the end segments first in reverse order
     for index in range(len(segments)-1, 0, -1):  # Loop backwards from last to second
-        x = segments[index-1].xcor()    # Get x of the segment in front
-        y = segments[index-1].ycor()    # Get y of the segment in front
-        segments[index].goto(x, y)      # Move current segment to that position
+        x = segments[index-1].xcor()
+        y = segments[index-1].ycor()
+        segments[index].goto(x, y)
 
     # Move the first segment to where the head is
-    if len(segments) > 0:               # If there is at least one segment
-        x = head.xcor()                 # Get head x
-        y = head.ycor()                 # Get head y
-        segments[0].goto(x,y)           # Move first segment to head position
 
-    move()    # Call move() to move the head
+    if len(segments) > 0:
+        x = head.xcor()
+        y = head.ycor()
+        segments[0].goto(x,y)
+
+    move()
 
     # Check for head collision with body segments
     for segment in segments:
         if segment.distance(head) < 20:  # If a segment is within 20 pixels of the head
-            time.sleep(1)                # Pause 1 second after collision
-            head.goto(0,0)               # Return head to start
-            head.direction = "stop"    # Stop movement
-        
-            # Hide the body segments
+            time.sleep(1)
+            head.goto(0,0)
+            head.direction = "stop"
+
             for segment in segments:
-                segment.goto(1000, 1000) # Move segments far off-screen
-        
-            # Clear the segments list
+                segment.goto(1000, 1000)
+
             segments.clear()
-
-            # Reset the score
             score = 0
-
-            # Reset game speed
             delay = 0.1
-        
-            # Update the score display
-            pen.clear()
-            pen.write("Score: {}  High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal"))
 
-time.sleep(delay)  # Wait according to delay value to control game speed
+            pen.clear()
+            pen.write("Score: {}  High Score: {}".format(score, high_score), align="center", font=("Courier", 20, "normal"))
+
+    # Control frame rate using delay (keeps game speed consistent)
+    time.sleep(delay)
